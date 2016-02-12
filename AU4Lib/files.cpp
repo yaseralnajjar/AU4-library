@@ -133,5 +133,5 @@ void filesTest(){
 	//int a = au_FileCreateNTFSLink("C:\\hi.txt", "C:\\FLink.txt", 1);
 	//int a = au_FileCreateShortCut("C:\\Hello.txt", "C:\\test.lnk", "C:\\", "a", "Description test", "C:\\windows\\system32\\shell.dll", "", 0, 0);
 	//int a = au_FileExists("C:\\Hello.txt");
-	int a = au_FileDelete("C:\\Hello.txt");
+	//int a = au_FileDelete("C:\\Hello.txt");
 }

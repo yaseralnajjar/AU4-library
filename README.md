@@ -1,2 +1,39 @@
-# AU4-Library
-AutoIt library re-written in C++ to enhance productivity
+AU4 Library
+===================================================================================
+
+Description:
+-----------
+AutoIt functions re-written in C++ to enhance the productivity of a developer.
+
+Why AutoIt ?
+-----------
+AutoIt functions are so powerful that it can almost implement anything in Windows. In addition, each function is well documented which makes it extremely easy to use them productively.
+
+Why this library ?
+-----------
+Well, the mechanism of an AutoIt binary file is not neat, so this is when AU4 Library come in handy. Another advantage is that AutoIt decompilers won't be something to worry about any more.
+
+What's been written up to now ?
+-----------
+The header files shows what AutoIt functions have been implemented up to now.
+
+Usage:
+-----------
+In each library, there are examples that show the usage of them. You can also have a look at the examples of AutoIt Online Documentation: https://www.autoitscript.com/autoit3/docs/ 
+
+Disclaimer:
+-----------
+I have not reverse engineered an AutoIt binary file to implement any function in this library.
+
+Special thanks to:
+-----------
+Mr.eXoDia
+
+Greetings to:
+-----------
+All of AT4RE and AoRE members.
+
+And surely, You !
+
+-----------
+Z-Rantom
