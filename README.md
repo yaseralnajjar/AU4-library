@@ -13,13 +13,10 @@ Why this library ?
 -----------
 Well, the mechanism of an AutoIt binary file is not neat, so this is when AU4 Library come in handy. Another advantage is that AutoIt decompilers won't be something to worry about any more.
 
-What's been written up to now ?
------------
-The header files shows what AutoIt functions have been implemented up to now.
-
 Usage:
 -----------
 In each library, there are examples that show the usage of them. You can also have a look at the examples of AutoIt Online Documentation: https://www.autoitscript.com/autoit3/docs/ 
+The header files show what AutoIt functions have been implemented up to now.
 
 Disclaimer:
 -----------
