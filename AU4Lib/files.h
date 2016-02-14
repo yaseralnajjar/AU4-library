@@ -16,4 +16,12 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir = "", str
 int au_FileDelete(string fileName);
 int au_FileExists(string fileName);
 
+struct retFileFindStruct
+{	HANDLE hSearch;
+	string hFileName;
+};
+retFileFindStruct au_FileFindFirstFile(string fileName);
+string au_FileFindNextFile(retFileFindStruct &retValues, int flag = 0);
+BOOL au__FindClose(HANDLE hSearch); //FileClose instead
+
 void filesTest();

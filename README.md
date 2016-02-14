@@ -11,7 +11,7 @@ AutoIt functions are so powerful that it can almost implement anything in Window
 
 Why this library ?
 -----------
-Well, the mechanism of an AutoIt binary file is not neat, so this is when AU4 Library come in handy. Another advantage is that AutoIt decompilers won't be something to worry about any more.
+Well, the mechanism of an AutoIt binary file is not neat, so this is when AU4 Library comes in handy. Another advantage is that AutoIt decompilers won't be something to worry about any more.
 
 Usage:
 -----------

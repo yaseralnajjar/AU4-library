@@ -18,7 +18,7 @@ HANDLE au_FileOpen(string FName, int FMode){
 	}
 
 
-	HANDLE hFile = CreateFileA(FName.c_str(),
+	HANDLE hFile = CreateFile(FName.c_str(),
 								FMode,
 								0,
 								NULL,
@@ -73,7 +73,7 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir, string a
 		pShellLink->SetWorkingDirectory(workdir.c_str());
 		pShellLink->SetArguments(args.c_str());
 		pShellLink->SetDescription(desc.c_str());
-		pShellLink->SetIconLocation(icon.c_str(), 0);
+		pShellLink->SetIconLocation(icon.c_str(), IcnNum); // to-check
 		//pShellLink->SetHotkey(0x0000); // to-do
 		pShellLink->SetShowCmd(state);
 
@@ -108,20 +108,32 @@ int au_FileDelete(string fileName){
 }
 
 int au_FileExists(string fileName){
-	//typedef LWSTDAPI_(BOOL)     PathFileExistsA(__in LPCSTR pszPath)
-	//typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
-	//typedef long (__stdcall * pICFUNC)(LPCTSTR);
-	//pICFUNC pGNSI;
-	//pGNSI = (pICFUNC) GetProcAddress(
-	//	GetModuleHandle(TEXT("shlwapi.dll")), 
-	//	"PathFileExists");
-	//if(NULL != pGNSI)
-	//{
-	//	return pGNSI(fileName.c_str());
-	//}
-	//return 0;
-
 	return PathFileExists(fileName.c_str());
+}
+
+retFileFindStruct au_FileFindFirstFile(string fileName){
+	retFileFindStruct retValues;
+	WIN32_FIND_DATA FindFileData;
+	retValues.hSearch = FindFirstFile(fileName.c_str(), &FindFileData);
+	retValues.hFileName = FindFileData.cFileName;
+	return retValues;
+}
+
+string au_FileFindNextFile(retFileFindStruct &retValues, int flag){
+	if (retValues.hFileName != ""){
+		string tempString = retValues.hFileName;
+		retValues.hFileName = "";
+		return tempString;
+	}
+	WIN32_FIND_DATA FindFileData;
+	if (FindNextFile(retValues.hSearch, &FindFileData)){
+		return FindFileData.cFileName;
+	}
+	return "";
+}
+
+BOOL au__FindClose(HANDLE hSearch){
+	return FindClose(hSearch);
 }
 
 
@@ -134,4 +146,15 @@ void filesTest(){
 	//int a = au_FileCreateShortCut("C:\\Hello.txt", "C:\\test.lnk", "C:\\", "a", "Description test", "C:\\windows\\system32\\shell.dll", "", 0, 0);
 	//int a = au_FileExists("C:\\Hello.txt");
 	//int a = au_FileDelete("C:\\Hello.txt");
+	
+	//FileFind:
+	/*retFileFindStruct fileSearch = au_FileFindFirstFile("C:\\test\\*.txt");
+	while (1)
+	{
+		string SearchResult = au_FileFindNextFile(fileSearch);
+		if (GetLastError() == ERROR_NO_MORE_FILES) break;
+		MessageBox(NULL, SearchResult.c_str(), "", MB_ICONINFORMATION);
+	}
+	FindClose(fileSearch.hSearch);*/
+	
 }
