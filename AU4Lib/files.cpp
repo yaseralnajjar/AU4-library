@@ -1,6 +1,26 @@
 #include "files.h"
 
-HANDLE au_FileOpen(string FName, int FMode){
+
+wstring Utf8ToUtf16(const string & str)
+{
+	//credits: Mr.Exodia
+	wstring convertedString;
+	int requiredSize = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, 0, 0);
+	if(requiredSize > 0)
+	{
+		vector<wchar_t> buffer(requiredSize);
+		MultiByteToWideChar(CP_UTF8, 0, str.c_str(), -1, &buffer[0], requiredSize);
+		convertedString.assign(buffer.begin(), buffer.end() - 1);
+	}
+	return convertedString;
+}
+
+wstring Utf8ToUtf16(const char* str)
+{
+	return Utf8ToUtf16(str ? string(str) : string());
+}
+
+HANDLE au_FileOpen(string fileName, int FMode){
 	switch (FMode){
 		case 0: FMode = GENERIC_READ; break;
 		case 1: FMode = FILE_APPEND_DATA; break;
@@ -18,7 +38,7 @@ HANDLE au_FileOpen(string FName, int FMode){
 	}
 
 
-	HANDLE hFile = CreateFile(FName.c_str(),
+	HANDLE hFile = CreateFileW(Utf8ToUtf16(fileName).c_str(),
 								FMode,
 								0,
 								NULL,
@@ -36,26 +56,26 @@ int au_FileCopy(string fSource, string fDest, int flag){
 	//$FC_CREATEPATH (8) = Create destination directory structure if it doesn't exist (See Remarks).
 	if (flag == 8){
 		const SECURITY_ATTRIBUTES *psa = NULL;
-		SHCreateDirectoryEx(NULL, string(fDest.substr(0, fDest.rfind("\\"))).c_str(), psa);
+		SHCreateDirectoryExW(NULL, Utf8ToUtf16(string(fDest.substr(0, fDest.rfind("\\")))).c_str(), psa);
 	}
-	int value = CopyFile(fSource.c_str(),
-				fDest.c_str(),
+	int value = CopyFileW(Utf8ToUtf16(fSource).c_str(),
+				Utf8ToUtf16(fDest).c_str(),
 				flag == 0 ? TRUE : FALSE);			//$FC_NOOVERWRITE (0) = (default) do not overwrite existing files
 													//$FC_OVERWRITE (1) = overwrite existing files					
 	return value;
 }
 
 int au_FileChangeDir(string NewPath){
-	int value = _chdir(NewPath.c_str());
+	int value = _wchdir(Utf8ToUtf16(NewPath).c_str());
 	return value == 0 ? TRUE : FALSE;
 }
 
 int au_FileCreateNTFSLink(string fSource, string fDest, int flag){
 	if (flag == 1){
-		DeleteFile(fDest.c_str());
+		DeleteFileW(Utf8ToUtf16(fDest).c_str());
 	}
-	int value =  CreateHardLink(fDest.c_str(), 
-					fSource.c_str(),
+	int value =  CreateHardLinkW(Utf8ToUtf16(fDest).c_str(), 
+					Utf8ToUtf16(fSource).c_str(),
 					NULL);
 	return value == 0 ? FALSE : TRUE;
 }
@@ -63,17 +83,17 @@ int au_FileCreateNTFSLink(string fSource, string fDest, int flag){
 int au_FileCreateShortCut(string fSource, string fDest, string workdir, string args, string desc, string icon, string hotkey, int IcnNum, int state){
 	//Credits: Deluge cplusplus.com
 	CoInitialize(NULL);
-	IShellLink* pShellLink = NULL;
+	IShellLinkW* pShellLink = NULL;
 	HRESULT hres;
 	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL,
 		IID_IShellLink, (void**)&pShellLink);
 	if (SUCCEEDED(hres))
 	{
-		pShellLink->SetPath(fSource.c_str());
-		pShellLink->SetWorkingDirectory(workdir.c_str());
-		pShellLink->SetArguments(args.c_str());
-		pShellLink->SetDescription(desc.c_str());
-		pShellLink->SetIconLocation(icon.c_str(), IcnNum); // to-check
+		pShellLink->SetPath(Utf8ToUtf16(fSource).c_str());
+		pShellLink->SetWorkingDirectory(Utf8ToUtf16(workdir).c_str());
+		pShellLink->SetArguments(Utf8ToUtf16(args).c_str());
+		pShellLink->SetDescription(Utf8ToUtf16(desc).c_str());
+		pShellLink->SetIconLocation(Utf8ToUtf16(icon).c_str(), IcnNum); // to-check
 		//pShellLink->SetHotkey(0x0000); // to-do
 		pShellLink->SetShowCmd(state);
 
@@ -103,33 +123,33 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir, string a
 }
 
 int au_FileDelete(string fileName){
-	int value = DeleteFile(fileName.c_str());
+	int value = DeleteFileW(Utf8ToUtf16(fileName).c_str());
 	return value == 0 ? FALSE : TRUE;
 }
 
 int au_FileExists(string fileName){
-	return PathFileExists(fileName.c_str());
+	return PathFileExistsW(Utf8ToUtf16(fileName).c_str());
 }
 
 retFileFindStruct au_FileFindFirstFile(string fileName){
 	retFileFindStruct retValues;
-	WIN32_FIND_DATA FindFileData;
-	retValues.hSearch = FindFirstFile(fileName.c_str(), &FindFileData);
+	WIN32_FIND_DATAW FindFileData;
+	retValues.hSearch = FindFirstFileW(Utf8ToUtf16(fileName).c_str(), &FindFileData);
 	retValues.hFileName = FindFileData.cFileName;
 	return retValues;
 }
 
-string au_FileFindNextFile(retFileFindStruct &retValues, int flag){
-	if (retValues.hFileName != ""){
-		string tempString = retValues.hFileName;
-		retValues.hFileName = "";
+wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
+	if (retValues.hFileName != L""){
+		wstring tempString = retValues.hFileName;
+		retValues.hFileName = L"";
 		return tempString;
 	}
-	WIN32_FIND_DATA FindFileData;
-	if (FindNextFile(retValues.hSearch, &FindFileData)){
+	WIN32_FIND_DATAW FindFileData;
+	if (FindNextFileW(retValues.hSearch, &FindFileData)){
 		return FindFileData.cFileName;
 	}
-	return "";
+	return L"";
 }
 
 BOOL au__FindClose(HANDLE hSearch){
@@ -148,13 +168,12 @@ void filesTest(){
 	//int a = au_FileDelete("C:\\Hello.txt");
 	
 	//FileFind:
-	/*retFileFindStruct fileSearch = au_FileFindFirstFile("C:\\test\\*.txt");
+	retFileFindStruct fileSearch = au_FileFindFirstFile("C:\\test\\*.txt");
 	while (1)
 	{
-		string SearchResult = au_FileFindNextFile(fileSearch);
+		wstring SearchResult = au_FileFindNextFile(fileSearch);
 		if (GetLastError() == ERROR_NO_MORE_FILES) break;
-		MessageBox(NULL, SearchResult.c_str(), "", MB_ICONINFORMATION);
+		MessageBox(NULL, SearchResult.c_str(), L"", MB_ICONINFORMATION);
 	}
-	FindClose(fileSearch.hSearch);*/
-	
+	FindClose(fileSearch.hSearch);
 }
