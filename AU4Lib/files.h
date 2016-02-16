@@ -8,24 +8,26 @@
 #include <vector>
 using namespace std;
 
-static wstring Utf8ToUtf16(const string & str);
-static wstring Utf8ToUtf16(const char* str);
+//static wstring Utf8ToUtf16(const string & str);
+//static wstring Utf8ToUtf16(const char* str);
+string ToAscii(const std::wstring& input);
+wstring ToUnicode(const std::string& input);
 
-HANDLE au_FileOpen(string FName, int FMode = GENERIC_READ);
+HANDLE au_FileOpen(wstring FName, int FMode = GENERIC_READ);
 int au_FileClose(HANDLE hFile);
-int au_FileCopy(string fSource, string fDest, int flag = 0);
-int au_FileChangeDir(string NewPath);
-int au_FileCreateNTFSLink(string fSource, string fDest, int flag = 0);
-int au_FileCreateShortCut(string fSource, string fDest, string workdir = "", string args = "",
-							string desc = "", string icon = "", string hotkey = "", int IcnNum = 0, int state = 0);
-int au_FileDelete(string fileName);
-int au_FileExists(string fileName);
+int au_FileCopy(wstring fSource, wstring fDest, int flag = 0);
+int au_FileChangeDir(wstring NewPath);
+int au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag = 0);
+int au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir = L"", wstring args = L"",
+							wstring desc = L"", wstring icon = L"", wstring hotkey = L"", int IcnNum = 0, int state = 0);
+int au_FileDelete(wstring fileName);
+int au_FileExists(wstring fileName);
 
 struct retFileFindStruct
 {	HANDLE hSearch;
 	wstring hFileName;
 };
-retFileFindStruct au_FileFindFirstFile(string fileName);
+retFileFindStruct au_FileFindFirstFile(wstring fileName);
 wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag = 0);
 BOOL au__FindClose(HANDLE hSearch); //FileClose instead
 

@@ -1,7 +1,7 @@
 #include "files.h"
 
 
-wstring Utf8ToUtf16(const string & str)
+/*wstring Utf8ToUtf16(const string & str)
 {
 	//credits: Mr.Exodia
 	wstring convertedString;
@@ -18,9 +18,23 @@ wstring Utf8ToUtf16(const string & str)
 wstring Utf8ToUtf16(const char* str)
 {
 	return Utf8ToUtf16(str ? string(str) : string());
+}*/
+
+string ToAscii(const std::wstring& input)
+{
+	//credits: atom0s
+    std::string str(input.begin(), input.end());
+    return str;
 }
 
-HANDLE au_FileOpen(string fileName, int FMode){
+wstring ToUnicode(const std::string& input)
+{
+    std::wstring str(input.begin(), input.end());
+    return str;
+}
+
+
+HANDLE au_FileOpen(wstring fileName, int FMode){
 	switch (FMode){
 		case 0: FMode = GENERIC_READ; break;
 		case 1: FMode = FILE_APPEND_DATA; break;
@@ -38,7 +52,7 @@ HANDLE au_FileOpen(string fileName, int FMode){
 	}
 
 
-	HANDLE hFile = CreateFileW(Utf8ToUtf16(fileName).c_str(),
+	HANDLE hFile = CreateFileW(fileName.c_str(),
 								FMode,
 								0,
 								NULL,
@@ -52,35 +66,35 @@ int au_FileClose(HANDLE hFile){
 	return CloseHandle(hFile);
 }
 
-int au_FileCopy(string fSource, string fDest, int flag){
+int au_FileCopy(wstring fSource, wstring fDest, int flag){
 	//$FC_CREATEPATH (8) = Create destination directory structure if it doesn't exist (See Remarks).
 	if (flag == 8){
 		const SECURITY_ATTRIBUTES *psa = NULL;
-		SHCreateDirectoryExW(NULL, Utf8ToUtf16(string(fDest.substr(0, fDest.rfind("\\")))).c_str(), psa);
+		SHCreateDirectoryExW(NULL, wstring(fDest.substr(0, fDest.rfind(L"\\"))).c_str(), psa);
 	}
-	int value = CopyFileW(Utf8ToUtf16(fSource).c_str(),
-				Utf8ToUtf16(fDest).c_str(),
+	int value = CopyFileW(fSource.c_str(),
+				fDest.c_str(),
 				flag == 0 ? TRUE : FALSE);			//$FC_NOOVERWRITE (0) = (default) do not overwrite existing files
 													//$FC_OVERWRITE (1) = overwrite existing files					
 	return value;
 }
 
-int au_FileChangeDir(string NewPath){
-	int value = _wchdir(Utf8ToUtf16(NewPath).c_str());
+int au_FileChangeDir(wstring NewPath){
+	int value = _wchdir(NewPath.c_str());
 	return value == 0 ? TRUE : FALSE;
 }
 
-int au_FileCreateNTFSLink(string fSource, string fDest, int flag){
+int au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag){
 	if (flag == 1){
-		DeleteFileW(Utf8ToUtf16(fDest).c_str());
+		DeleteFileW(fDest.c_str());
 	}
-	int value =  CreateHardLinkW(Utf8ToUtf16(fDest).c_str(), 
-					Utf8ToUtf16(fSource).c_str(),
+	int value =  CreateHardLinkW(fDest.c_str(), 
+					fSource.c_str(),
 					NULL);
 	return value == 0 ? FALSE : TRUE;
 }
 
-int au_FileCreateShortCut(string fSource, string fDest, string workdir, string args, string desc, string icon, string hotkey, int IcnNum, int state){
+int au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstring args, wstring desc, wstring icon, wstring hotkey, int IcnNum, int state){
 	//Credits: Deluge cplusplus.com
 	CoInitialize(NULL);
 	IShellLinkW* pShellLink = NULL;
@@ -89,11 +103,11 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir, string a
 		IID_IShellLink, (void**)&pShellLink);
 	if (SUCCEEDED(hres))
 	{
-		pShellLink->SetPath(Utf8ToUtf16(fSource).c_str());
-		pShellLink->SetWorkingDirectory(Utf8ToUtf16(workdir).c_str());
-		pShellLink->SetArguments(Utf8ToUtf16(args).c_str());
-		pShellLink->SetDescription(Utf8ToUtf16(desc).c_str());
-		pShellLink->SetIconLocation(Utf8ToUtf16(icon).c_str(), IcnNum); // to-check
+		pShellLink->SetPath(fSource.c_str());
+		pShellLink->SetWorkingDirectory(workdir.c_str());
+		pShellLink->SetArguments(args.c_str());
+		pShellLink->SetDescription(desc.c_str());
+		pShellLink->SetIconLocation(icon.c_str(), IcnNum); // to-check
 		//pShellLink->SetHotkey(0x0000); // to-do
 		pShellLink->SetShowCmd(state);
 
@@ -102,9 +116,9 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir, string a
 
 		if (SUCCEEDED(hres))
 		{
-			wstring fDestW(fDest.length(), L' ');
-			copy(fDest.begin(), fDest.end(), fDestW.begin());
-			hres = pPersistFile->Save(fDestW.c_str(), TRUE);
+			//wstring fDestW(fDest.length(), L' ');
+			//copy(fDest.begin(), fDest.end(), fDestW.begin());
+			hres = pPersistFile->Save(fDest.c_str(), TRUE);
 			pPersistFile->Release();
 		}
 		else
@@ -122,19 +136,19 @@ int au_FileCreateShortCut(string fSource, string fDest, string workdir, string a
 	return 1;
 }
 
-int au_FileDelete(string fileName){
-	int value = DeleteFileW(Utf8ToUtf16(fileName).c_str());
+int au_FileDelete(wstring fileName){
+	int value = DeleteFileW(fileName.c_str());
 	return value == 0 ? FALSE : TRUE;
 }
 
-int au_FileExists(string fileName){
-	return PathFileExistsW(Utf8ToUtf16(fileName).c_str());
+int au_FileExists(wstring fileName){
+	return PathFileExistsW(fileName.c_str());
 }
 
-retFileFindStruct au_FileFindFirstFile(string fileName){
+retFileFindStruct au_FileFindFirstFile(wstring fileName){
 	retFileFindStruct retValues;
 	WIN32_FIND_DATAW FindFileData;
-	retValues.hSearch = FindFirstFileW(Utf8ToUtf16(fileName).c_str(), &FindFileData);
+	retValues.hSearch = FindFirstFileW(fileName.c_str(), &FindFileData);
 	retValues.hFileName = FindFileData.cFileName;
 	return retValues;
 }
@@ -149,6 +163,7 @@ wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
 	if (FindNextFileW(retValues.hSearch, &FindFileData)){
 		return FindFileData.cFileName;
 	}
+	//flag to-do
 	return L"";
 }
 
@@ -168,11 +183,11 @@ void filesTest(){
 	//int a = au_FileDelete("C:\\Hello.txt");
 	
 	//FileFind:
-	retFileFindStruct fileSearch = au_FileFindFirstFile("C:\\test\\*.txt");
+	retFileFindStruct fileSearch = au_FileFindFirstFile(L"C:\\test\\*.txt");
 	while (1)
 	{
 		wstring SearchResult = au_FileFindNextFile(fileSearch);
-		if (GetLastError() == ERROR_NO_MORE_FILES) break;
+		if (GetLastError() == ERROR_NO_MORE_FILES || SearchResult == L"") break;
 		MessageBox(NULL, SearchResult.c_str(), L"", MB_ICONINFORMATION);
 	}
 	FindClose(fileSearch.hSearch);
