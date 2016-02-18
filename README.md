@@ -25,7 +25,7 @@ I have not reverse engineered an AutoIt binary file to implement any function in
 
 Special thanks to:
 -----------
-Mr.eXoDia
+Mr.eXoDia, STRELiTZIA, kOuD3LkA
 
 Greetings to:
 -----------

@@ -20,15 +20,13 @@ wstring Utf8ToUtf16(const char* str)
 	return Utf8ToUtf16(str ? string(str) : string());
 }*/
 
-string ToAscii(const std::wstring& input)
-{
+string ToAscii(const std::wstring& input){
 	//credits: atom0s
     std::string str(input.begin(), input.end());
     return str;
 }
 
-wstring ToUnicode(const std::string& input)
-{
+wstring ToUnicode(const std::string& input){
     std::wstring str(input.begin(), input.end());
     return str;
 }
@@ -79,22 +77,20 @@ int au_FileCopy(wstring fSource, wstring fDest, int flag){
 	return value;
 }
 
-int au_FileChangeDir(wstring NewPath){
+bool au_FileChangeDir(wstring NewPath){
 	int value = _wchdir(NewPath.c_str());
 	return value == 0 ? TRUE : FALSE;
 }
 
-int au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag){
+bool au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag){
 	if (flag == 1){
 		DeleteFileW(fDest.c_str());
 	}
-	int value =  CreateHardLinkW(fDest.c_str(), 
-					fSource.c_str(),
-					NULL);
+	int value = CreateHardLinkW(fDest.c_str(), fSource.c_str(), NULL);
 	return value == 0 ? FALSE : TRUE;
 }
 
-int au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstring args, wstring desc, wstring icon, wstring hotkey, int IcnNum, int state){
+bool au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstring args, wstring desc, wstring icon, wstring hotkey, int IcnNum, int state){
 	//Credits: Deluge cplusplus.com
 	CoInitialize(NULL);
 	IShellLinkW* pShellLink = NULL;
@@ -136,12 +132,35 @@ int au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstri
 	return 1;
 }
 
-int au_FileDelete(wstring fileName){
-	int value = DeleteFileW(fileName.c_str());
-	return value == 0 ? FALSE : TRUE;
+bool au_FileDelete(wstring fileName){
+	int value = 0;
+	wstring getLastPart = fileName.substr(fileName.rfind(L"\\")+1, fileName.length());
+	if (!PathIsDirectoryW(fileName.c_str())){ //Check if fileName is a folder.
+		if (getLastPart.find(L"*")){ //Parse last part of path to get wildcards if exists.
+			value = DeleteFileW(fileName.c_str());
+			return value == 0 ? FALSE : TRUE;
+		}
+	}
+	else{
+		fileName.append(L"\\*.*");
+	}
+	//delete using wildcards
+	wstring getPath = fileName.substr(0, fileName.rfind(L"\\")+1);
+	retFileFindStruct fileSearch = au_FileFindFirstFile(fileName);
+	while (1){
+		wstring SearchResult = au_FileFindNextFile(fileSearch);
+		if (GetLastError() == ERROR_NO_MORE_FILES || SearchResult == L"") break;
+		wstring lastPath = getPath + SearchResult;
+		if (!PathIsDirectoryW(lastPath.c_str())){
+			if (!DeleteFileW(lastPath.c_str())) return FALSE;
+		}
+	}
+	FindClose(fileSearch.hSearch);
+	return TRUE;
+	
 }
 
-int au_FileExists(wstring fileName){
+bool au_FileExists(wstring fileName){
 	return PathFileExistsW(fileName.c_str());
 }
 
@@ -150,6 +169,10 @@ retFileFindStruct au_FileFindFirstFile(wstring fileName){
 	WIN32_FIND_DATAW FindFileData;
 	retValues.hSearch = FindFirstFileW(fileName.c_str(), &FindFileData);
 	retValues.hFileName = FindFileData.cFileName;
+	if (retValues.hFileName == L"."){ // if fileName=="*.*"
+		retValues.hFileName = L"";
+		au_FileFindNextFile(retValues);
+	}
 	return retValues;
 }
 
@@ -167,10 +190,42 @@ wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
 	return L"";
 }
 
-BOOL au__FindClose(HANDLE hSearch){
+bool au__FindClose(HANDLE hSearch){
 	return FindClose(hSearch);
 }
 
+int au_FileFlush(HANDLE fHandle){
+	return FlushFileBuffers(fHandle);
+}
+
+string au_FileGetAttrib(wstring fileName){
+	int fileAttributes = GetFileAttributesW(fileName.c_str());
+	string returnValue = "";
+	if (fileAttributes & FILE_ATTRIBUTE_READONLY) returnValue.append("R"); // "R" = READONLY
+	if (fileAttributes & FILE_ATTRIBUTE_ARCHIVE) returnValue.append("A"); // "A" = ARCHIVE
+	if (fileAttributes & FILE_ATTRIBUTE_SYSTEM) returnValue.append("S"); // "S" = SYSTEM
+	if (fileAttributes & FILE_ATTRIBUTE_HIDDEN) returnValue.append("H"); // "H" = HIDDEN
+	if (fileAttributes & FILE_ATTRIBUTE_NORMAL) returnValue.append("N"); // "N" = NORMAL
+	if (fileAttributes & FILE_ATTRIBUTE_DIRECTORY) returnValue.append("D"); // "D" = DIRECTORY
+	if (fileAttributes & FILE_ATTRIBUTE_OFFLINE) returnValue.append("O"); // "O" = OFFLINE
+	if (fileAttributes & FILE_ATTRIBUTE_COMPRESSED) returnValue.append("C"); // "C" = COMPRESSED (NTFS compression, not ZIP compression)
+	if (fileAttributes & FILE_ATTRIBUTE_TEMPORARY) returnValue.append("T"); // "T" = TEMPORARY
+	if (fileAttributes & FILE_ATTRIBUTE_ENCRYPTED) returnValue.append("X"); //"X" = EFS ENCRYPTION
+	return returnValue;
+}
+
+int au_FileGetEncoding(wstring fileName, int flag){
+	// to-do
+	return 0;
+}
+
+wstring au_FileGetLongName(wstring fileName, int flag){
+	//flag: to-do
+	wchar_t retVal[MAX_PATH] = TEXT("");
+	GetLongPathNameW(fileName.c_str(), retVal, MAX_PATH);
+	wstring returnValue(retVal);
+	return returnValue;
+}
 
 void filesTest(){
 	//HANDLE hFile = au_FileOpen("Hello1.txt", 2);
@@ -179,16 +234,20 @@ void filesTest(){
 	//int a = au_FileChangeDir("z:\\");
 	//int a = au_FileCreateNTFSLink("C:\\hi.txt", "C:\\FLink.txt", 1);
 	//int a = au_FileCreateShortCut("C:\\Hello.txt", "C:\\test.lnk", "C:\\", "a", "Description test", "C:\\windows\\system32\\shell.dll", "", 0, 0);
-	//int a = au_FileExists("C:\\Hello.txt");
-	//int a = au_FileDelete("C:\\Hello.txt");
+	//int a = au_FileExists("C:\\test\\Hello.txt");
+	int a = au_FileDelete(L"C:\\test\\hello.txt");
+	//int a = au_FileDelete(L"C:\\test");
+	//int a = au_FileDelete(L"C:\\test\\*.*");
 	
 	//FileFind:
-	retFileFindStruct fileSearch = au_FileFindFirstFile(L"C:\\test\\*.txt");
+	/*retFileFindStruct fileSearch = au_FileFindFirstFile(L"C:\\test\\*.txt");
 	while (1)
 	{
-		wstring SearchResult = au_FileFindNextFile(fileSearch);
-		if (GetLastError() == ERROR_NO_MORE_FILES || SearchResult == L"") break;
-		MessageBox(NULL, SearchResult.c_str(), L"", MB_ICONINFORMATION);
+	wstring SearchResult = au_FileFindNextFile(fileSearch);
+	if (GetLastError() == ERROR_NO_MORE_FILES || SearchResult == L"") break;
 	}
-	FindClose(fileSearch.hSearch);
+	FindClose(fileSearch.hSearch);*/
+	
+	//string attribTest = au_FileGetAttrib(L"C:\\test\\go.txt");
+	//wstring GetLongPath = au_FileGetLongName(L"C:\\PROGRA~1");
 }
