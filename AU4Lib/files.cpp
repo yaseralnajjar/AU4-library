@@ -136,7 +136,7 @@ bool au_FileDelete(wstring fileName){
 	int value = 0;
 	wstring getLastPart = fileName.substr(fileName.rfind(L"\\")+1, fileName.length());
 	if (!PathIsDirectoryW(fileName.c_str())){ //Check if fileName is a folder.
-		if (getLastPart.find(L"*")){ //Parse last part of path to get wildcards if exists.
+		if ((getLastPart.find(L"*") == -1) && (getLastPart.find(L"?") == -1)){ //Parse last part of path to get wildcards if exists.
 			value = DeleteFileW(fileName.c_str());
 			return value == 0 ? FALSE : TRUE;
 		}
@@ -157,11 +157,11 @@ bool au_FileDelete(wstring fileName){
 	}
 	FindClose(fileSearch.hSearch);
 	return TRUE;
-	
 }
 
 bool au_FileExists(wstring fileName){
-	return PathFileExistsW(fileName.c_str());
+	int returnValue = PathFileExistsW(fileName.c_str());
+	return returnValue == 0 ? FALSE : TRUE;
 }
 
 retFileFindStruct au_FileFindFirstFile(wstring fileName){
@@ -191,7 +191,8 @@ wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
 }
 
 bool au__FindClose(HANDLE hSearch){
-	return FindClose(hSearch);
+	int returnValue = FindClose(hSearch);
+	return returnValue == 0 ? FALSE : TRUE;
 }
 
 int au_FileFlush(HANDLE fHandle){
@@ -221,26 +222,26 @@ int au_FileGetEncoding(wstring fileName, int flag){
 
 wstring au_FileGetLongName(wstring fileName, int flag){
 	//flag: to-do
-	wchar_t retVal[MAX_PATH] = TEXT("");
+	wchar_t retVal[MAX_PATH] = L"";
 	GetLongPathNameW(fileName.c_str(), retVal, MAX_PATH);
 	wstring returnValue(retVal);
 	return returnValue;
 }
 
 void filesTest(){
-	//HANDLE hFile = au_FileOpen("Hello1.txt", 2);
+	//HANDLE hFile = au_FileOpen(L"Hello1.txt", 2);
 	//int a = au_FileClose(hFile);
-	//int a = au_FileCopy("Hello.txt", "hi.txt", 1);
-	//int a = au_FileChangeDir("z:\\");
-	//int a = au_FileCreateNTFSLink("C:\\hi.txt", "C:\\FLink.txt", 1);
-	//int a = au_FileCreateShortCut("C:\\Hello.txt", "C:\\test.lnk", "C:\\", "a", "Description test", "C:\\windows\\system32\\shell.dll", "", 0, 0);
-	//int a = au_FileExists("C:\\test\\Hello.txt");
-	int a = au_FileDelete(L"C:\\test\\hello.txt");
+	//int a = au_FileCopy(L"Hello.txt", L"hi.txt", 1);
+	//int a = au_FileChangeDir(L"z:\\");
+	//int a = au_FileCreateNTFSLink(L"C:\\hi.txt", L"C:\\FLink.txt", 1);
+	//int a = au_FileCreateShortCut(L"C:\\Hello.txt", L"C:\\test.lnk", L"C:\\", L"a", L"Description test", L"C:\\windows\\system32\\shell.dll", L"", 0, 0);
+	//int a = au_FileExists(L"C:\\test\\Hello.txt");
+	//int a = au_FileDelete(L"C:\\test\\hello.txt");
 	//int a = au_FileDelete(L"C:\\test");
-	//int a = au_FileDelete(L"C:\\test\\*.*");
+	//int a = au_FileDelete(L"C:\\test\\go.tx?");
 	
 	//FileFind:
-	/*retFileFindStruct fileSearch = au_FileFindFirstFile(L"C:\\test\\*.txt");
+	/*retFileFindStruct fileSearch = au_FileFindFirstFile(L"C:\\test\\*.t*");
 	while (1)
 	{
 	wstring SearchResult = au_FileFindNextFile(fileSearch);
