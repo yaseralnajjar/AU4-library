@@ -47,6 +47,7 @@ HANDLE au_FileOpen(wstring fileName, int FMode){
 		//case 1024: FMode = GENERIC_WRITE;		/*$FO_UTF16_LE_NOBOM (1024) = Use Unicode UTF16 Little Endian (without BOM) reading and writing mode.*/
 		//case 2048: FMode = GENERIC_WRITE;		/*$FO_UTF16_BE_NOBOM (2048) = Use Unicode UTF16 Big Endian (without BOM) reading and writing mode.*/
 		//case 16384:	FMode = GENERIC_WRITE;		//$FO_FULLFILE_DETECT (16384) = When opening for reading and no BOM is present, use the entire file to determine if it is UTF8 or UTF16. If this is not used then only the initial part of the file (up to 64KB) is checked for performance reasons.
+		default: FMode = GENERIC_READ;
 	}
 
 
@@ -91,14 +92,12 @@ bool au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag){
 }
 
 bool au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstring args, wstring desc, wstring icon, wstring hotkey, int IcnNum, int state){
-	//Credits: Deluge cplusplus.com
+	//Credits: Deluge, cplusplus.com
 	CoInitialize(NULL);
 	IShellLinkW* pShellLink = NULL;
 	HRESULT hres;
-	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL,
-		IID_IShellLink, (void**)&pShellLink);
-	if (SUCCEEDED(hres))
-	{
+	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLink, (void**)&pShellLink);
+	if (SUCCEEDED(hres)){
 		pShellLink->SetPath(fSource.c_str());
 		pShellLink->SetWorkingDirectory(workdir.c_str());
 		pShellLink->SetArguments(args.c_str());
@@ -110,22 +109,17 @@ bool au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir, wstr
 		IPersistFile *pPersistFile;
 		hres = pShellLink->QueryInterface(IID_IPersistFile, (void**)&pPersistFile);
 
-		if (SUCCEEDED(hres))
-		{
-			//wstring fDestW(fDest.length(), L' ');
-			//copy(fDest.begin(), fDest.end(), fDestW.begin());
+		if (SUCCEEDED(hres)){
 			hres = pPersistFile->Save(fDest.c_str(), TRUE);
 			pPersistFile->Release();
 		}
-		else
-		{
+		else{
 			//Error 2
 			return 0;
 		}
 		pShellLink->Release();
 	}
-	else
-	{
+	else{
 		//Error 1
 		return 0;
 	}
@@ -228,6 +222,78 @@ wstring au_FileGetLongName(wstring fileName, int flag){
 	return returnValue;
 }
 
+LONGLONG au_FileGetPos(HANDLE fHandle){
+	LARGE_INTEGER fSize;
+	if (GetFileSizeEx(fHandle, &fSize)){
+		//credits: NULL, cplusplus.com
+		if (fSize.QuadPart > 4194304){
+			LARGE_INTEGER ret;
+
+			LARGE_INTEGER pos;
+			pos.QuadPart=0;
+
+			SetFilePointerEx(fHandle,pos,&ret,FILE_CURRENT);
+
+			return ret.QuadPart;
+		} 
+		else if (fSize.QuadPart > 0){
+			return SetFilePointer(fHandle,0,0,FILE_CURRENT);
+		}
+		return 0; //failed
+	}
+	else{
+		return 0;
+	}
+}
+
+LONGLONG au_FileGetSize(wstring fileName){
+	HANDLE fHandle = au_FileOpen(fileName, 0);
+	LARGE_INTEGER returnValue;
+	if (GetFileSizeEx(fHandle, &returnValue)){
+		return returnValue.QuadPart;
+	}
+	else{
+		return 0;
+	}
+}
+
+vector<wstring> au_FileGetShortCut(wstring fName){
+	vector<wstring> returnValue;
+	CoInitialize(NULL);
+	IShellLinkW* pShellLink = NULL;
+	HRESULT hres;
+	WIN32_FIND_DATA wfd;
+	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_ALL, IID_IShellLink, (void**)&pShellLink);
+	if (SUCCEEDED(hres)){
+		IPersistFile *pPersistFile;
+		hres = pShellLink->QueryInterface(IID_IPersistFile, (void**)&pPersistFile);
+
+		if (SUCCEEDED(hres)){
+			hres = pPersistFile->Load(fName.c_str(), STGM_READ);
+			if (SUCCEEDED(hres)){
+				//hres = pShellLink->Resolve(hwnd, 0);
+				if (SUCCEEDED(hres)){
+					vector<wchar_t> containVal;
+					DWORD size = 0;
+					auto ret = pShellLink->GetPath(nullptr, size, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
+					if(ret == 0 && ERROR_INSUFFICIENT_BUFFER == GetLastError() && size > 0){
+						containVal.resize(size);
+						pShellLink->GetPath(containVal.data(), size, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
+						if (SUCCEEDED(hres)){
+							pPersistFile->Release();
+							pShellLink->Release();
+							returnValue.push_back(containVal.data());
+							return returnValue;
+						}
+					}
+				}
+			}
+		}
+		
+	}
+	return returnValue; //failed
+}
+
 void filesTest(){
 	//HANDLE hFile = au_FileOpen(L"Hello1.txt", 2);
 	//int a = au_FileClose(hFile);
@@ -251,4 +317,6 @@ void filesTest(){
 	
 	//string attribTest = au_FileGetAttrib(L"C:\\test\\go.txt");
 	//wstring GetLongPath = au_FileGetLongName(L"C:\\PROGRA~1");
+	//int fSize = au_FileGetSize(L"C:\\test\\hell2o.txt");
+	vector<wstring> fLink = au_FileGetShortCut(L"C:\\test\\tlink.lnk");
 }

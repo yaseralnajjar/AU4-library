@@ -37,5 +37,8 @@ string au_FileGetAttrib(wstring fileName);
 int au_FileGetEncoding(wstring fileName, int flag = 1);
 int au_FileGetEncoding(HANDLE hFile, int flag = 1);
 wstring au_FileGetLongName(wstring fileName, int flag = 0);
+LONGLONG au_FileGetPos(HANDLE fHandle);
+vector<wstring> au_FileGetShortCut(wstring fName);
+LONGLONG au_FileGetSize(wstring fileName);
 
 void filesTest();
