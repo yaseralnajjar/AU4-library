@@ -14,31 +14,31 @@ using namespace std;
 string ToAscii(const std::wstring& input);
 wstring ToUnicode(const std::string& input);
 
-HANDLE au_FileOpen(wstring FName, int FMode = GENERIC_READ);
+HANDLE au_FileOpen(const wstring& FName, int FMode = GENERIC_READ);
 int au_FileClose(HANDLE hFile);
-int au_FileCopy(wstring fSource, wstring fDest, int flag = 0);
+int au_FileCopy(const wstring& fSource, const wstring& fDest, int flag = 0);
 bool au_FileChangeDir(wstring NewPath);
 bool au_FileCreateNTFSLink(wstring fSource, wstring fDest, int flag = 0);
 bool au_FileCreateShortCut(wstring fSource, wstring fDest, wstring workdir = L"", wstring args = L"",
 							wstring desc = L"", wstring icon = L"", wstring hotkey = L"", int IcnNum = 0, int state = 0);
 bool au_FileDelete(wstring fileName);
-bool au_FileExists(wstring fileName);
+bool au_FileExists(const wstring& fileName);
 
 struct retFileFindStruct
 {	HANDLE hSearch;
 	wstring hFileName;
 };
-retFileFindStruct au_FileFindFirstFile(wstring fileName);
-wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag = 0);
+retFileFindStruct au_FileFindFirstFile(const wstring& fileName);
+wstring au_FileFindNextFile(retFileFindStruct& retValues, int flag = 0);
 bool au__FindClose(HANDLE hSearch); //FileClose instead
 
 int au_FileFlush(HANDLE fHandle);
-string au_FileGetAttrib(wstring fileName);
+string au_FileGetAttrib(const wstring& fileName);
 int au_FileGetEncoding(wstring fileName, int flag = 1);
 int au_FileGetEncoding(HANDLE hFile, int flag = 1);
-wstring au_FileGetLongName(wstring fileName, int flag = 0);
+wstring au_FileGetLongName(const wstring& fileName, int flag = 0);
 LONGLONG au_FileGetPos(HANDLE fHandle);
-vector<wstring> au_FileGetShortCut(wstring fName);
-LONGLONG au_FileGetSize(wstring fileName);
+vector<wstring> au_FileGetShortCut(const wstring& fName);
+LONGLONG au_FileGetSize(const wstring& fileName);
 
 void filesTest();

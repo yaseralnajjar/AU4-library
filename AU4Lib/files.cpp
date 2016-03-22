@@ -1,7 +1,7 @@
 #include "files.h"
 
 
-/*wstring Utf8ToUtf16(const string & str)
+/*wstring Utf8ToUtf16(const string& str)
 {
 	//credits: Mr.Exodia
 	wstring convertedString;
@@ -31,8 +31,7 @@ wstring ToUnicode(const std::string& input){
     return str;
 }
 
-
-HANDLE au_FileOpen(wstring fileName, int FMode){
+HANDLE au_FileOpen(const wstring& fileName, int FMode){
 	switch (FMode){
 		case 0: FMode = GENERIC_READ; break;
 		case 1: FMode = FILE_APPEND_DATA; break;
@@ -65,7 +64,7 @@ int au_FileClose(HANDLE hFile){
 	return CloseHandle(hFile);
 }
 
-int au_FileCopy(wstring fSource, wstring fDest, int flag){
+int au_FileCopy(const wstring& fSource, const wstring& fDest, int flag){
 	//$FC_CREATEPATH (8) = Create destination directory structure if it doesn't exist (See Remarks).
 	if (flag == 8){
 		const SECURITY_ATTRIBUTES *psa = NULL;
@@ -153,12 +152,12 @@ bool au_FileDelete(wstring fileName){
 	return TRUE;
 }
 
-bool au_FileExists(wstring fileName){
+bool au_FileExists(const wstring& fileName){
 	int returnValue = PathFileExistsW(fileName.c_str());
 	return returnValue == 0 ? FALSE : TRUE;
 }
 
-retFileFindStruct au_FileFindFirstFile(wstring fileName){
+retFileFindStruct au_FileFindFirstFile(const wstring& fileName){
 	retFileFindStruct retValues;
 	WIN32_FIND_DATAW FindFileData;
 	retValues.hSearch = FindFirstFileW(fileName.c_str(), &FindFileData);
@@ -170,7 +169,7 @@ retFileFindStruct au_FileFindFirstFile(wstring fileName){
 	return retValues;
 }
 
-wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
+wstring au_FileFindNextFile(retFileFindStruct& retValues, int flag){
 	if (retValues.hFileName != L""){
 		wstring tempString = retValues.hFileName;
 		retValues.hFileName = L"";
@@ -180,7 +179,7 @@ wstring au_FileFindNextFile(retFileFindStruct &retValues, int flag){
 	if (FindNextFileW(retValues.hSearch, &FindFileData)){
 		return FindFileData.cFileName;
 	}
-	//flag to-do
+
 	return L"";
 }
 
@@ -190,10 +189,10 @@ bool au__FindClose(HANDLE hSearch){
 }
 
 int au_FileFlush(HANDLE fHandle){
-	return FlushFileBuffers(fHandle);
+	return FlushFileBuffers(fHandle); 
 }
 
-string au_FileGetAttrib(wstring fileName){
+string au_FileGetAttrib(const wstring& fileName){
 	int fileAttributes = GetFileAttributesW(fileName.c_str());
 	string returnValue = "";
 	if (fileAttributes & FILE_ATTRIBUTE_READONLY) returnValue.append("R"); // "R" = READONLY
@@ -209,17 +208,23 @@ string au_FileGetAttrib(wstring fileName){
 	return returnValue;
 }
 
-int au_FileGetEncoding(wstring fileName, int flag){
-	// to-do
+int au_FileGetEncoding(wstring fileName, int flag){ 
+	
 	return 0;
 }
 
-wstring au_FileGetLongName(wstring fileName, int flag){
-	//flag: to-do
-	wchar_t retVal[MAX_PATH] = L"";
+wstring au_FileGetLongName(const wstring& fileName, int flag){ 
+	//updated by Mr.Exodia
+	auto bufferLength = GetLongPathNameW(fileName.c_str(), nullptr, 0);
+	std::vector<wchar_t> longPath(bufferLength);
+	GetLongPathNameW(fileName.c_str(), longPath.data(), bufferLength);
+
+	return wstring(longPath.data());
+
+	/*wchar_t retVal[MAX_PATH] = L"";
 	GetLongPathNameW(fileName.c_str(), retVal, MAX_PATH);
 	wstring returnValue(retVal);
-	return returnValue;
+	return returnValue;*/
 }
 
 LONGLONG au_FileGetPos(HANDLE fHandle){
@@ -246,7 +251,7 @@ LONGLONG au_FileGetPos(HANDLE fHandle){
 	}
 }
 
-LONGLONG au_FileGetSize(wstring fileName){
+LONGLONG au_FileGetSize(const wstring& fileName){
 	HANDLE fHandle = au_FileOpen(fileName, 0);
 	LARGE_INTEGER returnValue;
 	if (GetFileSizeEx(fHandle, &returnValue)){
@@ -257,7 +262,7 @@ LONGLONG au_FileGetSize(wstring fileName){
 	}
 }
 
-vector<wstring> au_FileGetShortCut(wstring fName){
+vector<wstring> au_FileGetShortCut(const wstring& fName){
 	vector<wstring> returnValue;
 	CoInitialize(NULL);
 	IShellLinkW* pShellLink = NULL;
@@ -273,25 +278,36 @@ vector<wstring> au_FileGetShortCut(wstring fName){
 			if (SUCCEEDED(hres)){
 				//hres = pShellLink->Resolve(hwnd, 0);
 				if (SUCCEEDED(hres)){
-					vector<wchar_t> containVal;
-					DWORD size = 0;
-					auto ret = pShellLink->GetPath(nullptr, size, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
-					if(ret == 0 && ERROR_INSUFFICIENT_BUFFER == GetLastError() && size > 0){
-						containVal.resize(size);
-						pShellLink->GetPath(containVal.data(), size, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
-						if (SUCCEEDED(hres)){
-							pPersistFile->Release();
-							pShellLink->Release();
-							returnValue.push_back(containVal.data());
-							return returnValue;
-						}
+					vector<wchar_t> containVal(MAX_PATH);
+					hres = pShellLink->GetPath(containVal.data(), MAX_PATH, (WIN32_FIND_DATA*)&wfd, SLGP_SHORTPATH);
+					if (SUCCEEDED(hres)) { //works once = works for others
+						returnValue.push_back(containVal.data());
+						containVal.clear();
+						pShellLink->GetWorkingDirectory(containVal.data(), MAX_PATH); //get working dir
+						returnValue.push_back(containVal.data());
+						containVal.clear();
+						pShellLink->GetArguments(containVal.data(), INFOTIPSIZE); //get args
+						returnValue.push_back(containVal.data());
+						containVal.clear();
+						pShellLink->GetDescription(containVal.data(), INFOTIPSIZE); //get description
+						returnValue.push_back(containVal.data());
+						containVal.clear();
+						int iconID = 0;
+						pShellLink->GetIconLocation(containVal.data(), MAX_PATH, &iconID); //get icon file name & ID
+						returnValue.push_back(containVal.data());
+						returnValue.push_back(to_wstring(iconID));
+						containVal.clear();
+						//pShellLink->GetShowCmd(containVal.data(), MAX_PATH); //get shortcut state to-do
+						returnValue.push_back(containVal.data());
 					}
 				}
 			}
+			pPersistFile->Release();
 		}
-		
+		pShellLink->Release();
 	}
-	return returnValue; //failed
+
+	return returnValue;
 }
 
 void filesTest(){
