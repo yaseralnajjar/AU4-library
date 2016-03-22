@@ -217,9 +217,11 @@ wstring au_FileGetLongName(const wstring& fileName, int flag){
 	//updated by Mr.Exodia
 	auto bufferLength = GetLongPathNameW(fileName.c_str(), nullptr, 0);
 	std::vector<wchar_t> longPath(bufferLength);
-	GetLongPathNameW(fileName.c_str(), longPath.data(), bufferLength);
+	if (GetLongPathNameW(fileName.c_str(), longPath.data(), bufferLength)) {
+		return wstring(longPath.data());
+	}
 
-	return wstring(longPath.data());
+	return 0; // failed
 
 	/*wchar_t retVal[MAX_PATH] = L"";
 	GetLongPathNameW(fileName.c_str(), retVal, MAX_PATH);
@@ -332,7 +334,7 @@ void filesTest(){
 	FindClose(fileSearch.hSearch);*/
 	
 	//string attribTest = au_FileGetAttrib(L"C:\\test\\go.txt");
-	//wstring GetLongPath = au_FileGetLongName(L"C:\\PROGRA~1");
+	wstring GetLongPath = au_FileGetLongName(L"C:\\PROGRA~1");
 	//int fSize = au_FileGetSize(L"C:\\test\\hell2o.txt");
-	vector<wstring> fLink = au_FileGetShortCut(L"C:\\test\\tlink.lnk");
+	//vector<wstring> fLink = au_FileGetShortCut(L"C:\\test\\tlink.lnk");
 }
