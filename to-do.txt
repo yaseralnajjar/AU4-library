@@ -25,6 +25,9 @@ needs to change vector to unique_ptr
 au_FileGetPos:
 untested
 
+au_FileInstall:
+No idea how to write it yet
+
 au_FileCreateShortCut:
 pShellLink->SetIconLocation(icon.c_str(), IcnNum); // to-check
 //pShellLink->SetHotkey(0x0000); // to-do
