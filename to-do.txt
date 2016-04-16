@@ -1,4 +1,4 @@
-Passing const to functions when needed
+Passing by reference (with const) to functions when needed
 Consider using unique_ptr instead of vector (cuz of cpu consuming)
 
 =======================
