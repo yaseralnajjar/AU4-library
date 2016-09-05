@@ -1,0 +1,36 @@
+Passing by reference (with const) to functions when needed
+Consider using unique_ptr instead of vector (cuz of cpu consuming)
+
+=======================
+
+au_FileOpen:
+flags
+
+au_FileFindNextFile:
+flag
+
+au__FindClose:
+overload(change) function name
+
+au_FileFlush:
+untested
+
+au_FileGetEncoding:
+implement using included library
+
+au_FileGetLongName:
+flags
+needs to change vector to unique_ptr
+
+au_FileGetPos:
+untested
+
+au_FileInstall:
+No idea how to write it yet
+
+au_FileCreateShortCut:
+pShellLink->SetIconLocation(icon.c_str(), IcnNum); // to-check
+//pShellLink->SetHotkey(0x0000); // to-do
+
+au_FileGetShortCut:
+//pShellLink->GetShowCmd(containVal.data(), MAX_PATH); //get shortcut state to-do

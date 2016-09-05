@@ -21,7 +21,7 @@ The header files show what AutoIt functions have been implemented up to now.
 
 Authors:
 -----------
-Z-Rantom: [Files](https://github.com/Z-Rantom/AU4-Library/blob/master/AU4Lib/lib/files/files.h).
+0xRumple: [Files](https://github.com/0xRumple/AU4-Library/blob/master/AU4Lib/lib/files/files.h).
 
 gil900: [GUI](https://github.com/GilEli1/CU3-Library/blob/master/gui.h).
 
@@ -40,4 +40,4 @@ All of AT4RE and AoRE members.
 And surely, You !
 
 -----------
-Z-Rantom
+0xRumple
