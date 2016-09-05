@@ -33,11 +33,5 @@ Special thanks to:
 -----------
 Mr.eXoDia, STRELiTZIA, kOuD3LkA
 
-Greetings to:
------------
-All of AT4RE and AoRE members.
-
-And surely, You !
-
 -----------
 0xRumple
